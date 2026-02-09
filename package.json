@@ -1,0 +1,16 @@
+{
+  "name": "inm420-weather",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "lite-server"
+  },
+  "author": "Amanda Lutz",
+  "license": "private",
+  "private": true,
+  "devDependencies": {
+    "lite-server": "^2.6.1"
+  },
+  "main": "main.js",
+  "keywords": [],
+  "description": ""
+}
