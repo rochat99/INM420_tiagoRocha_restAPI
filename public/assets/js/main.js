@@ -1,17 +1,38 @@
 const wordInput = document.getElementById("wordInput");
 const submitBtn = document.getElementById("submitButton");
+const errorMessageArea = document.getElementById("errorMessageArea");
 const definitionArea = document.getElementById("definitionArea");
 const synonymList = document.getElementById("synonymList");
 const antonymList = document.getElementById("antonymList");
 
+wordInput.addEventListener("keypress", function(e){
+
+    const word = wordInput.value;
+    let wordTrim = word.trim();
+
+    if (e.key === "Enter") {
+
+        getDefinition(wordTrim)
+
+        wordInput.value = "";
+
+    }
+
+})
+
 //button listener to search word
 submitBtn.addEventListener("click", function() {
 
-    const word = wordInput.value.trim();
+    const word = wordInput.value;
+    let wordTrim = word.trim();
 
-    if(word) {
-        getDefinition(word);
+    if(wordTrim) {
+
+        getDefinition(wordTrim);
+
     };
+
+    wordInput.value = "";
 
 });
 
@@ -28,25 +49,29 @@ async function getDefinition(word) {
     const thesaurusData = await thesaurusResponse.json();
     console.log("json data from API", urlThesaurus); 
 
-    //check if typed word exists in dictionary
+    //check if typed word exists in dictionary if not, display error message
     if (dictionaryData.length === 0) {
 
-        //clear definition area
-        definitionArea.innerHTML = "";
+        //clear all areas
+        clearAllFields();
 
         //build HTML
         let notFound = document.createElement("h2");
-        definitionArea.append(notFound);
+
+        errorMessageArea.append(notFound);
+
         notFound.classList.add("notFound");
+
         notFound.innerHTML = `${word} not found in dictionary`;
 
-    //if typo is detected and near word is detected by api, create a 'did you mean' section
+    // else if typo is detected and near word is detected by api, create a 'did you mean' section
     } else if (typeof dictionaryData[0] === "string") {
 
-        definitionArea.innerHTML = "";
+        clearAllFields();
 
         let couldNotFind = document.createElement("h2");
         let didYouMean = document.createElement("h3");
+        let ul = document.createElement("ul");
 
         couldNotFind.classList.add("couldNotFind");
         didYouMean.classList.add("didYouMean");
@@ -55,47 +80,73 @@ async function getDefinition(word) {
         didYouMean.innerHTML = "Did you mean..."
 
         definitionArea.append(couldNotFind, didYouMean);
+        errorMessageArea.append(ul);
         
-        //typo pulls up an array, loop through array to display each option
-        for (let i = 0; i < dictionaryData.length; i++) {
+        //loop through word suggestions and display them with links to words
+        dictionaryData.forEach(word => {
 
+            let li = document.createElement("li");
             let option = document.createElement("a");
 
-            option.innerHTML = dictionaryData[i];
+            option.innerHTML = word;
+            option.href = "#";
 
-            definitionArea.append(option);
+            ul.append(li);
+            li.appendChild(option);
 
-            option.href = `https://dictionaryapi.com/api/v3/references/collegiate/json/${dictionaryData[i]}?key=103f26a7-bfb3-4869-8849-6d885a8b2deb`
+            option.addEventListener("click", function(e) {
 
-        }
+                e.preventDefault();
+                getDefinition(word);
 
+            });
+
+        })
+
+    //otherwise get word and definition and display them
     } else if (dictionaryData[0].meta) {
 
-        buildDefinition(dictionaryData[0].meta.hwi.hw, dictionaryData[0].meta.fl, dictionaryData[0].meta.shortdef);
+        // clearAllFields();
 
-        if (thesaurusData[0].meta.syns) {
-            buildSynonyms(thesaurusData[0].meta.syns.flat());
-        };
+        buildDefinition(dictionaryData[0].meta.hwi.hw, dictionaryData[0].meta.fl, dictionaryData[0].meta.shortdef[0]);
 
-        if (thesaurusData[0].meta.ants) {
-            buildAntonyms(thesaurusData[0].meta.ants.flat());
+        if (thesaurusData[0] && typeof thesaurusData[0] === "object" && thesaurusData[0].meta) {
+
+            //check if there are synonyms or antonyms in thesaurus. If true, display them else clear the list
+            if (thesaurusData[0].meta.syns) {
+
+                buildSynonyms(thesaurusData[0].meta.syns.flat());
+
+            } else {
+
+                synonymList.innerHTML = "";
+
+            };
+
+            if (thesaurusData[0].meta.ants) {
+
+                buildAntonyms(thesaurusData[0].meta.ants.flat());
+
+            } else {
+
+                antonymList.innerHTML = "";
+
+            };
+            
         };
 
     };
 
 };
 
+//create HTML structure to display word, functional label and definition
 function buildDefinition(word, fl, shortdef) {
 
     definitionArea.innerHTML = "";
-    antonymList.innerHTML = "";
 
     let wordTitle = document.createElement("h2");
     let functionalLabel = document.createElement("p");
     let definition = document.createElement("p");
-
-    let antonymTitle = document.createElement("h2");
-    antonymTitle.innerHTML = "Antonyms"
 
     functionalLabel.classList.add("functionalLabel");
 
@@ -113,39 +164,71 @@ function buildSynonyms(synonymArray) {
     synonymList.innerHTML = "";
 
     let synonymTitle = document.createElement("h2");
+    let ul = document.createElement("ul");
+
     synonymTitle.innerHTML = "Synonyms";
 
     synonymList.append(synonymTitle);
+    synonymList.append(ul);
 
-    for (let i = 0; i < synonymArray.length; i++) {
+    synonymArray.forEach(syn => {
         
+        let li = document.createElement("li");
         let synonym = document.createElement("a");
 
-        synonym.innerHTML = synonymArray[i];
+        synonym.href = "#";
+        synonym.innerHTML = syn;
 
-        synonym.href = `https://dictionaryapi.com/api/v3/references/collegiate/json/${synonymArray[i]}?key=103f26a7-bfb3-4869-8849-6d885a8b2deb`
+        ul.append(li);
+        li.append(synonym);
 
-    };
+        synonym.addEventListener("click", function(e) {
 
+            e.preventDefault();
+            getDefinition(syn);
+
+        });
+    });
 };
 
+//create list of antonyms with link to search up selected word
 function buildAntonyms(antonymArray) {
 
-    antonymList.innerHTML = '';
+    antonymList.innerHTML = "";
 
     let antonymTitle = document.createElement("h2");
+    let ul = document.createElement("ul");
+
     antonymTitle.innerHTML = "Antonyms";
 
     antonymList.append(antonymTitle);
+    antonymList.append(ul);
     
-    for (let i = 0; i < antonymArray.length; i++) {
+    antonymArray.forEach(ant => {
         
+        let li = document.createElement("li");
         let antonym = document.createElement("a");
+        antonym.href = "#";
 
-        antonym.innerHTML = antonymArray[i];
+        antonym.innerHTML = ant;
 
-        antonym.href = `https://dictionaryapi.com/api/v3/references/collegiate/json/${antonymArray[i]}?key=103f26a7-bfb3-4869-8849-6d885a8b2deb`
+        ul.append(li);
+        li.append(antonym);
 
-    };
+        antonym.addEventListener("click", function(e) {
+
+            e.preventDefault();
+            getDefinition(ant);
+
+        });
+    });
+};
+
+function clearAllFields() {
+
+    errorMessageArea.innerHTML = "";
+    definitionArea.innerHTML = "";
+    synonymList.innerHTML = "";
+    antonymList.innerHTML = "";
 
 };
