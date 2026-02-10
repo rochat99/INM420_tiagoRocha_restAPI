@@ -2,9 +2,9 @@
   "name": "inm420-weather",
   "version": "1.0.0",
   "scripts": {
-    "start": "lite-server"
+    "start": "lite-server --baseDir=\"public\""
   },
-  "author": "Amanda Lutz",
+  "author": "Tiago Rocha",
   "license": "private",
   "private": true,
   "devDependencies": {
@@ -12,5 +12,6 @@
   },
   "main": "main.js",
   "keywords": [],
-  "description": ""
+  "description": "",
+  "type": "commonjs"
 }
