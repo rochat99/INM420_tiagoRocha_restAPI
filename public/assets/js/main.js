@@ -106,9 +106,9 @@ async function getDefinition(word) {
     //otherwise get word and definition and display them
     } else if (dictionaryData[0].meta) {
 
-        // clearAllFields();
+        console.log(dictionaryData[0].meta.shortdef)
 
-        buildDefinition(dictionaryData[0].meta.hwi.hw, dictionaryData[0].meta.fl, dictionaryData[0].meta.shortdef[0]);
+        buildDefinition(dictionaryData[0].meta.id, dictionaryData[0].fl, dictionaryData[0].shortdef);
 
         if (thesaurusData[0] && typeof thesaurusData[0] === "object" && thesaurusData[0].meta) {
 
